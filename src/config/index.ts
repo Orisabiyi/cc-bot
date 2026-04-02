@@ -54,4 +54,7 @@ export const config: BotConfig = {
     ownerId: required("DISCORD_OWNER_ID"),
   },
   timezone: optional("TIMEZONE", "Africa/Lagos"),
+  groq: {
+    apiKey: required("GROQ_API_KEY"),
+  },
 };

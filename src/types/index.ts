@@ -94,5 +94,8 @@ export interface BotConfig {
     channels: Record<DiscordChannelType, string>;
     ownerId: string;
   };
+  groq: {
+    apiKey: string;
+  };
   timezone: string;
 }

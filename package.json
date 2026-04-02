@@ -8,15 +8,17 @@
     "start": "tsx src/index.ts",
     "post:now": "tsx scripts/post-now.ts",
     "check": "tsx scripts/check-schedule.ts",
+    "generate": "tsx scripts/generate.ts",
     "build": "tsc",
     "setup:discord": "tsx scripts/setup-discord.ts"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15",
-    "discord.js": "^14.16.3",
-    "node-cron": "^3.0.3",
     "dayjs": "^1.11.13",
+    "discord.js": "^14.16.3",
     "dotenv": "^16.4.7",
+    "groq-sdk": "^1.1.2",
+    "node-cron": "^3.0.3",
     "winston": "^3.17.0"
   },
   "devDependencies": {
