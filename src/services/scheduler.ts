@@ -30,6 +30,7 @@ import {
 import type { ContentItem, ReminderPayload } from "../types/index.js";
 import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
+import { generateWeeklyPlan } from "./content-pipeline.js";
 
 // ═══════════════════════════════════════════════════
 // Process today's content items
@@ -129,12 +130,12 @@ async function sendTomorrowPreview(): Promise<void> {
           item.platform === "twitter"
             ? "🐦"
             : item.platform === "linkedin"
-            ? "💼"
-            : item.platform === "instagram"
-            ? "📸"
-            : item.platform === "discord"
-            ? "💬"
-            : "📌";
+              ? "💼"
+              : item.platform === "instagram"
+                ? "📸"
+                : item.platform === "discord"
+                  ? "💬"
+                  : "📌";
         return `${emoji} **${capitalize(item.platform)}** — ${truncate(item.content, 80)}`;
       })
       .join("\n");
@@ -236,11 +237,42 @@ export function startScheduler(): void {
     { timezone: config.timezone }
   );
 
+  // ─── Sunday 10:00 WAT — Auto-generate next week's content ───
+  cron.schedule(
+    "0 1 * * 1",
+    async () => {
+      logger.info("⏰ Sunday 10:00 — Generating next week's content");
+      try {
+        const result = await generateWeeklyPlan();
+        logger.info(
+          `Generated ${result.savedCount} content drafts for the week`
+        );
+
+        // Notify you via DM that new drafts are ready
+        const reminder: ReminderPayload = {
+          platform: "discord",
+          content: `🧠 **Weekly Content Generated**\n\n${result.savedCount} new drafts have been added to your Content Pipeline in Notion.\n\nTopics:\n${result.ideas
+            .map((i) => `→ ${i.topic} (${i.platforms.join(", ")})`)
+            .join("\n")}\n\nReview them, tweak the voice, and flip to "Ready" when approved.`,
+          scheduledDate: dayjs().format("YYYY-MM-DD"),
+          action: "review",
+        };
+        await sendReminder(reminder);
+      } catch (error: any) {
+        logger.error("Weekly content generation failed", {
+          error: error.message,
+        });
+      }
+    },
+    { timezone: config.timezone }
+  );
+
   logger.info("✅ All cron jobs registered");
   logger.info("  → 08:00 WAT — Morning reminders (all platforms)");
   logger.info("  → 09:00 WAT — Auto-post to Discord");
   logger.info("  → 20:00 WAT — Tomorrow's content preview DM");
   logger.info("  → Sunday 19:00 WAT — Weekly events digest");
+  logger.info("  → Sunday 10:00 WAT — AI content generation (weekly)");
 }
 
 // ═══════════════════════════════════════════════════
